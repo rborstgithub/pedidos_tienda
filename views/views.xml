@@ -35,7 +35,7 @@
         <field name="target">new</field>
     </record>
 
-    <menuitem name="Generar ordenes compras" id="pedidos_tienda.menu_orden_compra" parent="purchase.menu_procurement_management"
+    <menuitem name="Generar ordenes compras" id="pedidos_tienda.menu_orden_compra" parent="purchase.menu_purchase_control"
               action="pedidos_tienda.action_window_orden_compra"/>
 
 </odoo>

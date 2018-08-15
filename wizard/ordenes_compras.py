@@ -26,6 +26,7 @@ class pedidos_tienda_orden_compra(models.TransientModel):
     productos_ids = fields.One2many('pedidos_tienda.producto', 'pedido_id', 'Productos', default=_default_productos)
 
     def generar(self):
+        importe_minimo = self.env.user.company_id.po_double_validation_amount
         compras = {}
         productos = {}
         ubicacion_usuario_actual = self.env.user.default_location_id.id
@@ -62,6 +63,7 @@ class pedidos_tienda_orden_compra(models.TransientModel):
                                 'list_price': linea.product_id.list_price,
                                 'qty': linea.qty,
                         })
+                        
         for i in compras.values():
             compra = {
                 'partner_id':i['partner_id'],
@@ -79,6 +81,8 @@ class pedidos_tienda_orden_compra(models.TransientModel):
                     'price_unit': producto['list_price'],
                 }
                 linea_id = self.env['purchase.order.line'].create(linea_compra)
+            if compra_id.amount_total < importe_minimo:
+                compra_id.button_approve()
         return True
 
 class predidos_tienda_producto(models.TransientModel):
