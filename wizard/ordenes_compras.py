@@ -20,7 +20,7 @@ class pedidos_tienda_orden_compra(models.TransientModel):
                     if ubicacion.id == ubicacion_usuario_actual:
                         lista_ubicaciones['uom_id'].append(proveedor.uom_id.id)
             if len(lista_ubicaciones['uom_id']) > 0:
-                lista_productos.append((0,0,{'product_id': producto.id,'uom_id':lista_ubicaciones['uom_id'][0] ,'qty': 0}))
+                lista_productos.append((0,0,{'product_id': producto.id,'uom_id':lista_ubicaciones['uom_id'][0] ,'qty': 0,'qty_stock': producto.with_context(location = ubicacion_usuario_actual).qty_available}))
         return lista_productos
 
     productos_ids = fields.One2many('pedidos_tienda.producto', 'pedido_id', 'Productos', default=_default_productos)
@@ -93,3 +93,4 @@ class predidos_tienda_producto(models.TransientModel):
     product_id = fields.Many2one('product.product',string='Producto')
     uom_id = fields.Many2one('product.uom','Unidad de medida',readonly=True)
     qty = fields.Integer('Cantidad')
+    qty_stock = fields.Integer('Cantidad actual')
