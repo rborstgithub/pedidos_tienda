@@ -19,6 +19,7 @@
     'data': [
         'views/views.xml',
         'views/product_views.xml',
+        'views/partner_view.xml',
         'security/ir.model.access.csv',
     ],
 }
