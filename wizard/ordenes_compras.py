@@ -5,6 +5,7 @@ from odoo.exceptions import UserError, AccessError
 import base64
 import datetime
 import logging
+import dateutil.parser
 
 class pedidos_tienda_orden_compra(models.TransientModel):
     _name = 'pedidos_tienda.orden_compra'
@@ -81,6 +82,7 @@ class pedidos_tienda_orden_compra(models.TransientModel):
                 compra = {
                     'partner_id':i['partner_id'],
                     'picking_type_id': picking_type_id,
+                    'fecha_entrega': datetime.datetime.now() + datetime.timedelta(days=1)
                 }
                 compra_id = self.env['purchase.order'].create(compra)
                 for producto in i['productos']:
