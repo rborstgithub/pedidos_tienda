@@ -25,6 +25,7 @@ class pedidos_tienda_orden_compra(models.TransientModel):
         return lista_productos
 
     productos_ids = fields.One2many('pedidos_tienda.producto', 'pedido_id', 'Productos')
+    fecha_entrega = fields.Date('Fecha de entrega')
 
     def generar(self):
         importe_minimo = self.env.user.company_id.po_double_validation_amount
@@ -82,7 +83,7 @@ class pedidos_tienda_orden_compra(models.TransientModel):
                 compra = {
                     'partner_id':i['partner_id'],
                     'picking_type_id': picking_type_id,
-                    'fecha_entrega': datetime.datetime.now() + datetime.timedelta(days=1)
+                    'fecha_entrega': self.fecha_entrega
                 }
                 compra_id = self.env['purchase.order'].create(compra)
                 for producto in i['productos']:
@@ -106,8 +107,20 @@ class predidos_tienda_producto(models.TransientModel):
 
     _name = 'pedidos_tienda.producto'
 
+    @api.model
+    def _get_domain_product(self):
+        productos = []
+        productos_ids = self.env['product.product'].search([('purchase_ok', '=', True)])
+        if productos_ids:
+            for producto in productos_ids:
+                for proveedor in producto.seller_ids:
+                    for ubicacion in proveedor.location_ids:
+                        if ubicacion == self.env.user.default_location_id:
+                            productos.append(producto.id)
+        return [('purchase_ok', '=', True),('id','in',productos)]
+
     pedido_id = fields.Many2one('pedidos_tienda.orden_compra','Pedido', required=True)
-    product_id = fields.Many2one('product.product',string='Producto')
+    product_id = fields.Many2one('product.product',string='Producto',domain=_get_domain_product)
     uom_id = fields.Many2one('product.uom','Unidad de medida',readonly=True)
     qty = fields.Integer('Cantidad')
     qty_stock = fields.Integer('Cantidad actual', readonly=True)
