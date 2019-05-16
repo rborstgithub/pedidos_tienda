@@ -14,7 +14,7 @@
     'category': 'Uncategorized',
     'version': '0.1',
 
-    'depends': ['purchase'],
+    'depends': ['purchase','pos_gt'],
 
     'data': [
         'views/views.xml',

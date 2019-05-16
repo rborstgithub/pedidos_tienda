@@ -5,6 +5,9 @@
         <field name="model">pedidos_tienda.orden_compra</field>
         <field name="arch" type="xml">
             <form string="Productos">
+                <group>
+                    <field name="fecha_entrega"/>
+                </group>
                 <field name="productos_ids"/>
                 <footer>
                     <button name="generar" string="Generar" type="object" class="oe_highlight"/>
