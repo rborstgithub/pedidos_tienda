@@ -20,6 +20,9 @@
         'views/views.xml',
         'views/product_views.xml',
         'views/partner_view.xml',
+        'views/purchase_views.xml',
+        'views/stock_picking_views.xml',
+        'views/pedidos_tienda_view.xml',
         'security/ir.model.access.csv',
     ],
 }

@@ -27,6 +27,15 @@ class pedidos_tienda_orden_compra(models.TransientModel):
     productos_ids = fields.One2many('pedidos_tienda.producto', 'pedido_id', 'Productos')
     fecha_entrega = fields.Date('Fecha de entrega')
 
+    def convertir(self, producto, proveedor_uom, cantidad, precio):
+        res = {}
+        conversion = self.env['pedidos_tienda.conversion_uom'].search([('product_id', '=', producto.id), ('uom_id', '=', proveedor_uom.id), ('uom_dest_id', '=', producto.uom_po_id.id)])
+        if not conversion:
+            raise UserError('No existen conversión especial para la siguiente combinación:\n\nProducto: ' + producto.name + '\nUnidad de medida origen: ' + proveedor_uom.name + '\nUnidad de medida destino: ' + producto.uom_po_id.name)
+        res['cantidad'] = cantidad * conversion.factor
+        res['precio'] = precio / conversion.factor
+        return res
+
     def generar(self):
         importe_minimo = self.env.user.company_id.po_double_validation_amount
         compras = {}
@@ -48,16 +57,21 @@ class pedidos_tienda_orden_compra(models.TransientModel):
                                 proveedores['uom_id'].append(proveedor.uom_id.id)
                                 proveedores['cantidad_minima'] = proveedor.min_qty
                                 proveedores['precio'] = proveedor.price
+
                     llave = proveedores['partner_id'][0]
+                    proveedor_uom_id = self.env['product.uom'].search([('id', '=', proveedores['uom_id'][0])])
+                    conv = self.convertir(linea.product_id, proveedor_uom_id, linea.qty, proveedores['precio'])
                     if llave not in compras:
                         compras[llave]= {
                             'partner_id': proveedores['partner_id'][0],
                             'productos':[{
                                 'product_id':linea.product_id.id,
                                 'name': linea.product_id.name,
-                                'uom_id': proveedores['uom_id'][0],
-                                'price': proveedores['precio'],
-                                'qty': linea.qty,
+                                'uom_id': linea.product_id.uom_po_id.id,
+                                'qty': conv['cantidad'],
+                                'ref_uom_id': proveedores['uom_id'][0],
+                                'ref_qty': linea.qty,
+                                'price': conv['precio'],
                             }],
                             'monto': proveedores['precio'] * linea.qty,
                         }
@@ -67,9 +81,11 @@ class pedidos_tienda_orden_compra(models.TransientModel):
                         compras[llave]['productos'].append({
                                 'product_id':linea.product_id.id,
                                 'name': linea.product_id.name,
-                                'uom_id': proveedores['uom_id'][0],
-                                'price': proveedores['precio'],
-                                'qty': linea.qty,
+                                'uom_id': linea.product_id.uom_po_id.id,
+                                'qty': conv['cantidad'],
+                                'ref_uom_id': proveedores['uom_id'][0],
+                                'ref_qty': linea.qty,
+                                'price': conv['precio'], 
                         })
 
         compras_monto = []
@@ -86,19 +102,28 @@ class pedidos_tienda_orden_compra(models.TransientModel):
                     'fecha_entrega': self.fecha_entrega
                 }
                 compra_id = self.env['purchase.order'].create(compra)
+                logging.getLogger('COMPRA_ID').warn(compra_id)
                 for producto in i['productos']:
                     linea_compra = {
                         'order_id': compra_id.id,
                         'date_planned': datetime.datetime.now(),
                         'product_id': producto['product_id'],
                         'name': producto['name'],
-                        'product_qty': producto['qty'],
                         'product_uom': producto['uom_id'],
+                        'product_qty': producto['qty'],
+                        'ref_product_uom': producto['ref_uom_id'],
+                        'ref_product_qty': producto['ref_qty'],
                         'price_unit': producto['price'],
                     }
+                    logging.warn('LINEA 01')
+                    logging.warn(linea_compra)
                     linea_id = self.env['purchase.order.line'].create(linea_compra)
+                    logging.warn('LINEA 02')
                 if compra_id.amount_total < importe_minimo:
+                    logging.warn('LINEA 03')
                     compra_id.button_approve()
+                    logging.warn('LINEA 04')
+
         else:
             raise UserError('Los siguientes productos no cumplen con el minimo de compra: ' +str(compras_monto))
         return True

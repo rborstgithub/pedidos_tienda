@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record model="ir.ui.view" id="pedidos_tienda_view_conversion_form">
+            <field name="name">pedidos_tienda.conversion_uom.form</field>
+            <field name="model">pedidos_tienda.conversion_uom</field>
+            <field name="arch" type="xml">
+                <form string="Conversión de unidades de medida">
+                    <group>
+                        <group>
+                            <field name="product_id"/>
+                            <field name="uom_id"/>
+                            <field name="uom_dest_id"/>
+                            <field name="factor"/>
+                        </group>
+                        <group>
+                        </group>
+                    </group>
+                </form>
+            </field>
+        </record>
+
+        <record id="pedidos_tienda_view_conversion_tree" model="ir.ui.view">
+            <field name="name">pedidos_tienda.conversion_uom.tree</field>
+            <field name="model">pedidos_tienda.conversion_uom</field>
+            <field name="arch" type="xml">
+                <tree string="Conversión de unidades de medida">
+                    <field name="product_id"/>
+                    <field name="uom_id"/>
+                    <field name="uom_dest_id"/>
+                    <field name="factor"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_pedidos_tienda_view_conversion" model="ir.actions.act_window">
+            <field name="name">Conversión de unidades de medida</field>
+            <field name="res_model">pedidos_tienda.conversion_uom</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+    <menuitem id="menu_pedidos_tienda_conversion_uom_action" action="action_pedidos_tienda_view_conversion" name="Conversión especial UdM" parent="stock.product_uom_menu" sequence="36"/>
+
+    </data>
+</odoo>
