@@ -29,11 +29,14 @@ class pedidos_tienda_orden_compra(models.TransientModel):
 
     def convertir(self, producto, proveedor_uom, cantidad, precio):
         res = {}
-        conversion = self.env['pedidos_tienda.conversion_uom'].search([('product_id', '=', producto.id), ('uom_id', '=', proveedor_uom.id), ('uom_dest_id', '=', producto.uom_po_id.id)])
+        if producto.uom_po_id.category_id.id == proveedor_uom.category_id.id:
+            conversion = self.env['pedidos_tienda.conversion_uom'].search([('uom_id', '=', proveedor_uom.id), ('uom_dest_id', '=', producto.uom_po_id.id)])        
+        else:
+            conversion = self.env['pedidos_tienda.conversion_uom'].search([('product_id', '=', producto.id), ('uom_id', '=', proveedor_uom.id), ('uom_dest_id', '=', producto.uom_po_id.id)])
         if not conversion:
             raise UserError('No existen conversión especial para la siguiente combinación:\n\nProducto: ' + producto.name + '\nUnidad de medida origen: ' + proveedor_uom.name + '\nUnidad de medida destino: ' + producto.uom_po_id.name)
-        res['cantidad'] = cantidad * conversion.factor
-        res['precio'] = precio / conversion.factor
+        res['cantidad'] = cantidad * conversion[0].factor
+        res['precio'] = precio / conversion[0].factor
         return res
 
     def generar(self):
