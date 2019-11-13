@@ -24,13 +24,13 @@ class pedidos_tienda_orden_compra(models.TransientModel):
                 lista_productos.append((0,0,{'product_id': producto.id,'uom_id':lista_ubicaciones['uom_id'][0] ,'qty': 0,'qty_stock': producto.with_context(location = ubicacion_usuario_actual).qty_available}))
         return lista_productos
 
-    productos_ids = fields.One2many('pedidos_tienda.producto', 'pedido_id', 'Productos',default=_default_productos)
+    productos_ids = fields.One2many('pedidos_tienda.producto', 'pedido_id','Productos',default=_default_productos)
     fecha_entrega = fields.Date('Fecha de entrega')
 
     def convertir(self, producto, proveedor_uom, cantidad, precio):
         res = {}
         if producto.uom_po_id.category_id.id == proveedor_uom.category_id.id:
-            conversion = self.env['pedidos_tienda.conversion_uom'].search([('uom_id', '=', proveedor_uom.id), ('uom_dest_id', '=', producto.uom_po_id.id)])        
+            conversion = self.env['pedidos_tienda.conversion_uom'].search([('uom_id', '=', proveedor_uom.id), ('uom_dest_id', '=', producto.uom_po_id.id)])
         else:
             conversion = self.env['pedidos_tienda.conversion_uom'].search([('product_id', '=', producto.id), ('uom_id', '=', proveedor_uom.id), ('uom_dest_id', '=', producto.uom_po_id.id)])
         if not conversion:
@@ -88,7 +88,7 @@ class pedidos_tienda_orden_compra(models.TransientModel):
                                 'qty': conv['cantidad'],
                                 'ref_uom_id': proveedores['uom_id'][0],
                                 'ref_qty': linea.qty,
-                                'price': conv['precio'], 
+                                'price': conv['precio'],
                         })
 
         compras_monto = []
