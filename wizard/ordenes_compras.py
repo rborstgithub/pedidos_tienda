@@ -29,14 +29,17 @@ class pedidos_tienda_orden_compra(models.TransientModel):
 
     def convertir(self, producto, proveedor_uom, cantidad, precio):
         res = {}
-        if producto.uom_po_id.category_id.id == proveedor_uom.category_id.id:
-            conversion = self.env['pedidos_tienda.conversion_uom'].search([('uom_id', '=', proveedor_uom.id), ('uom_dest_id', '=', producto.uom_po_id.id)])
-        else:
+        
+        if producto.uom_po_id.category_id.id != proveedor_uom.category_id.id:
             conversion = self.env['pedidos_tienda.conversion_uom'].search([('product_id', '=', producto.id), ('uom_id', '=', proveedor_uom.id), ('uom_dest_id', '=', producto.uom_po_id.id)])
-        if not conversion:
-            raise UserError('No existen conversión especial para la siguiente combinación:\n\nProducto: ' + producto.name + '\nUnidad de medida origen: ' + proveedor_uom.name + '\nUnidad de medida destino: ' + producto.uom_po_id.name)
-        res['cantidad'] = cantidad * conversion[0].factor
-        res['precio'] = precio / conversion[0].factor
+            if not conversion:
+                raise UserError('No existen conversión especial para la siguiente combinación:\n\nProducto: ' + producto.name + '\nUnidad de medida origen: ' + proveedor_uom.name + '\nUnidad de medida destino: ' + producto.uom_po_id.name)
+            res['cantidad'] = cantidad * conversion[0].factor
+            res['precio'] = precio / conversion[0].factor
+        else:
+            res['cantidad'] = cantidad
+            res['precio'] = precio
+        
         return res
 
     def generar(self):
@@ -64,13 +67,19 @@ class pedidos_tienda_orden_compra(models.TransientModel):
                     llave = proveedores['partner_id'][0]
                     proveedor_uom_id = self.env['product.uom'].search([('id', '=', proveedores['uom_id'][0])])
                     conv = self.convertir(linea.product_id, proveedor_uom_id, linea.qty, proveedores['precio'])
+                    
+                    if conv['cantidad'] == linea.qty:
+                        uom_linea = proveedores['uom_id'][0]
+                    else:
+                        uom_linea = linea.product_id.uom_po_id.id
+
                     if llave not in compras:
                         compras[llave]= {
                             'partner_id': proveedores['partner_id'][0],
                             'productos':[{
                                 'product_id':linea.product_id.id,
                                 'name': linea.product_id.name,
-                                'uom_id': linea.product_id.uom_po_id.id,
+                                'uom_id': uom_linea,
                                 'qty': conv['cantidad'],
                                 'ref_uom_id': proveedores['uom_id'][0],
                                 'ref_qty': linea.qty,
@@ -84,7 +93,7 @@ class pedidos_tienda_orden_compra(models.TransientModel):
                         compras[llave]['productos'].append({
                                 'product_id':linea.product_id.id,
                                 'name': linea.product_id.name,
-                                'uom_id': linea.product_id.uom_po_id.id,
+                                'uom_id': uom_linea,
                                 'qty': conv['cantidad'],
                                 'ref_uom_id': proveedores['uom_id'][0],
                                 'ref_qty': linea.qty,
@@ -105,7 +114,6 @@ class pedidos_tienda_orden_compra(models.TransientModel):
                     'fecha_entrega': self.fecha_entrega
                 }
                 compra_id = self.env['purchase.order'].create(compra)
-                logging.getLogger('COMPRA_ID').warn(compra_id)
                 for producto in i['productos']:
                     linea_compra = {
                         'order_id': compra_id.id,
@@ -118,14 +126,10 @@ class pedidos_tienda_orden_compra(models.TransientModel):
                         'ref_product_qty': producto['ref_qty'],
                         'price_unit': producto['price'],
                     }
-                    logging.warn('LINEA 01')
-                    logging.warn(linea_compra)
                     linea_id = self.env['purchase.order.line'].create(linea_compra)
-                    logging.warn('LINEA 02')
+
                 if compra_id.amount_total < importe_minimo:
-                    logging.warn('LINEA 03')
                     compra_id.button_approve()
-                    logging.warn('LINEA 04')
 
         else:
             raise UserError('Los siguientes productos no cumplen con el minimo de compra: ' +str(compras_monto))
