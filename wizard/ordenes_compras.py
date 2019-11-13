@@ -24,7 +24,7 @@ class pedidos_tienda_orden_compra(models.TransientModel):
                 lista_productos.append((0,0,{'product_id': producto.id,'uom_id':lista_ubicaciones['uom_id'][0] ,'qty': 0,'qty_stock': producto.with_context(location = ubicacion_usuario_actual).qty_available}))
         return lista_productos
 
-    productos_ids = fields.One2many('pedidos_tienda.producto', 'pedido_id', 'Productos')
+    productos_ids = fields.One2many('pedidos_tienda.producto', 'pedido_id', 'Productos',default=_default_productos)
     fecha_entrega = fields.Date('Fecha de entrega')
 
     def generar(self):
