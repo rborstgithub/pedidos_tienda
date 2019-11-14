@@ -24,12 +24,12 @@ class pedidos_tienda_orden_compra(models.TransientModel):
                 lista_productos.append((0,0,{'product_id': producto.id,'uom_id':lista_ubicaciones['uom_id'][0] ,'qty': 0,'qty_stock': producto.with_context(location = ubicacion_usuario_actual).qty_available}))
         return lista_productos
 
-    productos_ids = fields.One2many('pedidos_tienda.producto', 'pedido_id','Productos',default=_default_productos)
+    productos_ids = fields.One2many('pedidos_tienda.producto', 'pedido_id','Productos')
     fecha_entrega = fields.Date('Fecha de entrega')
 
     def convertir(self, producto, proveedor_uom, cantidad, precio):
         res = {}
-        
+
         if producto.uom_po_id.category_id.id != proveedor_uom.category_id.id:
             conversion = self.env['pedidos_tienda.conversion_uom'].search([('product_id', '=', producto.id), ('uom_id', '=', proveedor_uom.id), ('uom_dest_id', '=', producto.uom_po_id.id)])
             if not conversion:
@@ -39,7 +39,7 @@ class pedidos_tienda_orden_compra(models.TransientModel):
         else:
             res['cantidad'] = cantidad
             res['precio'] = precio
-        
+
         return res
 
     def generar(self):
@@ -67,7 +67,7 @@ class pedidos_tienda_orden_compra(models.TransientModel):
                     llave = proveedores['partner_id'][0]
                     proveedor_uom_id = self.env['product.uom'].search([('id', '=', proveedores['uom_id'][0])])
                     conv = self.convertir(linea.product_id, proveedor_uom_id, linea.qty, proveedores['precio'])
-                    
+
                     if conv['cantidad'] == linea.qty:
                         uom_linea = proveedores['uom_id'][0]
                     else:
@@ -138,6 +138,21 @@ class pedidos_tienda_orden_compra(models.TransientModel):
 class predidos_tienda_producto(models.TransientModel):
 
     _name = 'pedidos_tienda.producto'
+
+    @api.onchange('product_id')
+    def onchange_product_id(self):
+        res = []
+        if self.product_id:
+            ubicacion_usuario_actual = self.env.user.default_location_id.id
+            lista_ubicaciones = {'uom_id':[]}
+            for proveedor in self. product_id.seller_ids:
+                for ubicacion in proveedor.location_ids:
+                    if ubicacion.id == ubicacion_usuario_actual:
+                        lista_ubicaciones['uom_id'].append(proveedor.uom_id.id)
+            if len(lista_ubicaciones['uom_id']) > 0:
+                self.uom_id = lista_ubicaciones['uom_id'][0]
+                self.qty_stock = self.product_id.with_context(location = ubicacion_usuario_actual).qty_available
+        return res
 
     @api.model
     def _get_domain_product(self):
