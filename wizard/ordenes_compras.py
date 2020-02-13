@@ -127,6 +127,7 @@ class pedidos_tienda_orden_compra(models.TransientModel):
                         'price_unit': producto['price'],
                     }
                     linea_id = self.env['purchase.order.line'].create(linea_compra)
+                    linea_id._compute_tax_id()
 
                 if compra_id.amount_total < importe_minimo:
                     compra_id.button_approve()
