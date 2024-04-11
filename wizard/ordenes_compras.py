@@ -59,13 +59,13 @@ class pedidos_tienda_orden_compra(models.TransientModel):
                     for proveedor in producto.seller_ids:
                         for ubicacion in proveedor.location_ids:
                             if ubicacion.id == ubicacion_usuario_actual:
-                                proveedores['partner_id'].append(proveedor.name.id)
+                                proveedores['partner_id'].append(proveedor.partner_id.id)
                                 proveedores['uom_id'].append(proveedor.uom_id.id)
                                 proveedores['cantidad_minima'] = proveedor.min_qty
                                 proveedores['precio'] = proveedor.price
 
                     llave = proveedores['partner_id'][0]
-                    proveedor_uom_id = self.env['product.uom'].search([('id', '=', proveedores['uom_id'][0])])
+                    proveedor_uom_id = self.env['uom.uom'].search([('id', '=', proveedores['uom_id'][0])])
                     conv = self.convertir(linea.product_id, proveedor_uom_id, linea.qty, proveedores['precio'])
 
                     if conv['cantidad'] == linea.qty:
@@ -111,7 +111,6 @@ class pedidos_tienda_orden_compra(models.TransientModel):
                 compra = {
                     'partner_id':i['partner_id'],
                     'picking_type_id': picking_type_id,
-                    'fecha_entrega': self.fecha_entrega
                 }
                 compra_id = self.env['purchase.order'].create(compra)
                 for producto in i['productos']:
@@ -131,6 +130,8 @@ class pedidos_tienda_orden_compra(models.TransientModel):
 
                 if compra_id.amount_total < importe_minimo:
                     compra_id.button_approve()
+
+                compra_id.date_planned = self.fecha_entrega
 
         else:
             raise UserError('Los siguientes productos no cumplen con el minimo de compra: ' +str(compras_monto))
@@ -169,6 +170,6 @@ class predidos_tienda_producto(models.TransientModel):
 
     pedido_id = fields.Many2one('pedidos_tienda.orden_compra','Pedido', required=True)
     product_id = fields.Many2one('product.product',string='Producto',domain=_get_domain_product)
-    uom_id = fields.Many2one('product.uom','Unidad de medida',readonly=True)
+    uom_id = fields.Many2one('uom.uom','Unidad de medida',readonly=True)
     qty = fields.Integer('Cantidad')
     qty_stock = fields.Integer('Cantidad actual', readonly=True)

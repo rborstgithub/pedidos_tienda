@@ -8,4 +8,4 @@ class SupplierInfo(models.Model):
     _inherit = "product.supplierinfo"
 
     location_ids = fields.Many2many('stock.location',string='Ubicacion')
-    uom_id = fields.Many2one('product.uom','Unidad de medida')
+    uom_id = fields.Many2one('uom.uom','Unidad de medida')
