@@ -24,7 +24,7 @@ class pedidos_tienda_orden_compra(models.TransientModel):
                 lista_productos.append((0,0,{'product_id': producto.id,'uom_id':lista_ubicaciones['uom_id'][0] ,'qty': 0,'qty_stock': producto.with_context(location = ubicacion_usuario_actual).qty_available}))
         return lista_productos
 
-    productos_ids = fields.One2many('pedidos_tienda.producto', 'pedido_id','Productos')
+    productos_ids = fields.One2many('pedidos_tienda.producto', 'pedido_id','Productos', default=_default_productos)
     fecha_entrega = fields.Date('Fecha de entrega')
 
     def convertir(self, producto, proveedor_uom, cantidad, precio):
@@ -111,6 +111,7 @@ class pedidos_tienda_orden_compra(models.TransientModel):
                 compra = {
                     'partner_id':i['partner_id'],
                     'picking_type_id': picking_type_id,
+                    'user_id': self.env.user.id,
                 }
                 compra_id = self.env['purchase.order'].create(compra)
                 for producto in i['productos']:
@@ -128,7 +129,7 @@ class pedidos_tienda_orden_compra(models.TransientModel):
                     linea_id = self.env['purchase.order.line'].create(linea_compra)
                     linea_id._compute_tax_id()
 
-                if compra_id.amount_total < importe_minimo:
+                if self.env.user.company_id.po_double_validation == 'one_step' or (self.env.user.company_id.po_double_validation == 'two_step' and compra_id.amount_total < importe_minimo):
                     compra_id.button_approve()
 
                 compra_id.date_planned = self.fecha_entrega
