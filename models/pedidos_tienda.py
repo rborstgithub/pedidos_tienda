@@ -9,3 +9,8 @@ class ConversionUnidadMedida(models.Model):
     uom_id = fields.Many2one('uom.uom', 'Unidad medida origen', required=True)
     uom_dest_id = fields.Many2one('uom.uom', 'Unidad medida destino', required=True)
     factor = fields.Float('Factor conversión', required=True)
+
+class PlantillaProducto(models.Model):
+    _name = 'pedidos_tienda.plantilla_producto'
+
+    name = fields.Char()

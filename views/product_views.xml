@@ -25,4 +25,19 @@
             </field>
         </record>
 
+
+        <record model="ir.ui.view" id="product_template_form_view_plantilla_producto">
+            <field name="name">pedidos_tienda.product_template_only_form_view</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="product.product_template_only_form_view"/>
+            <field name="priority" eval="15"/>
+            <field name="arch" type="xml">
+                <data>
+                    <field name="categ_id" position="after">
+                        <field name="plantilla_id"/>
+                    </field>
+                </data>
+            </field>
+        </record>
+
 </odoo>

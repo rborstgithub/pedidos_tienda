@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 from odoo import api, fields, models, tools, _
-from odoo.exceptions import ValidationError
-from odoo.osv import expression
 
-from odoo.addons import decimal_precision as dp
+class ProductProduct(models.Model):
+    _inherit = "product.template"
+
+    plantilla_id = fields.Many2one('pedidos_tienda.plantilla_producto', string='Plantilla')
+
 class SupplierInfo(models.Model):
     _inherit = "product.supplierinfo"
 

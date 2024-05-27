@@ -13,7 +13,13 @@ class pedidos_tienda_orden_compra(models.TransientModel):
     def _default_productos(self):
         lista_productos = []
         ubicacion_usuario_actual = self.env.user.default_location_id.id
-        productos = self.env['product.product'].search([])
+        domain = []
+        logging.warning(self.plantilla_id.name)
+        if self.plantilla_id:
+            domain = [('plantilla_id', '=', self.plantilla_id.id)]
+        logging.warning(domain)
+        productos = self.env['product.product'].search(domain)
+        logging.warning(productos)
         for producto in productos:
             lista_ubicaciones = {'uom_id':[]}
             for proveedor in producto.seller_ids:
@@ -24,8 +30,17 @@ class pedidos_tienda_orden_compra(models.TransientModel):
                 lista_productos.append((0,0,{'product_id': producto.id,'uom_id':lista_ubicaciones['uom_id'][0] ,'qty': 0,'qty_stock': producto.with_context(location = ubicacion_usuario_actual).qty_available}))
         return lista_productos
 
-    productos_ids = fields.One2many('pedidos_tienda.producto', 'pedido_id','Productos', default=_default_productos)
+    @api.onchange('plantilla_id')
+    def _onchange_plantilla(self):
+        if self.plantilla_id:
+            for line in self.productos_ids:
+                self.productos_ids = [(3, line.id)]
+
+            self.productos_ids = self._default_productos()
+
     fecha_entrega = fields.Date('Fecha de entrega')
+    plantilla_id = fields.Many2one('pedidos_tienda.plantilla_producto', string='Plantilla')
+    productos_ids = fields.One2many('pedidos_tienda.producto', 'pedido_id','Productos', default=_default_productos)
 
     def convertir(self, producto, proveedor_uom, cantidad, precio):
         res = {}
