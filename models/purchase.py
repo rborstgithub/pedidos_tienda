@@ -7,6 +7,7 @@ class PurchaseOrderLine(models.Model):
     _inherit = 'purchase.order.line'
 
     def _default_account_analytic_id(self):
+        a = 1
         cuenta_analitica= self.env.user.default_analytic_account_id
         return cuenta_analitica
 
