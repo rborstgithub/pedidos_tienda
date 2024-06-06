@@ -38,7 +38,7 @@ class pedidos_tienda_orden_compra(models.TransientModel):
 
             self.productos_ids = self._default_productos()
 
-    fecha_entrega = fields.Date('Fecha de entrega')
+    fecha_entrega = fields.Date('Fecha de entrega', required=True)
     plantilla_id = fields.Many2one('pedidos_tienda.plantilla_producto', string='Plantilla')
     productos_ids = fields.One2many('pedidos_tienda.producto', 'pedido_id','Productos', default=_default_productos)
 
