@@ -14,12 +14,9 @@ class pedidos_tienda_orden_compra(models.TransientModel):
         lista_productos = []
         ubicacion_usuario_actual = self.env.user.default_location_id.id
         domain = []
-        logging.warning(self.plantilla_id.name)
         if self.plantilla_id:
             domain = [('plantilla_id', '=', self.plantilla_id.id)]
-        logging.warning(domain)
         productos = self.env['product.product'].search(domain)
-        logging.warning(productos)
         for producto in productos:
             lista_ubicaciones = {'uom_id':[]}
             for proveedor in producto.seller_ids:
@@ -148,6 +145,7 @@ class pedidos_tienda_orden_compra(models.TransientModel):
                     compra_id.button_approve()
 
                 compra_id.date_planned = self.fecha_entrega
+                compra_id.date_planned = compra_id.date_planned + datetime.timedelta(hours=6)
 
         else:
             raise UserError('Los siguientes productos no cumplen con el minimo de compra: ' +str(compras_monto))
