@@ -126,6 +126,7 @@ class pedidos_tienda_orden_compra(models.TransientModel):
                     'user_id': self.env.user.id,
                 }
                 compra_id = self.env['purchase.order'].create(compra)
+                date_planned = datetime.datetime(self.fecha_entrega.year, self.fecha_entrega.month, self.fecha_entrega.day, 6, 0, 0)
                 for producto in i['productos']:
                     linea_compra = {
                         'order_id': compra_id.id,
@@ -137,15 +138,13 @@ class pedidos_tienda_orden_compra(models.TransientModel):
                         'ref_product_uom': producto['ref_uom_id'],
                         'ref_product_qty': producto['ref_qty'],
                         'price_unit': producto['price'],
+                        'date_planned': date_planned,
                     }
                     linea_id = self.env['purchase.order.line'].create(linea_compra)
                     linea_id._compute_tax_id()
 
                 if self.env.user.company_id.po_double_validation == 'one_step' or (self.env.user.company_id.po_double_validation == 'two_step' and compra_id.amount_total < importe_minimo):
                     compra_id.button_approve()
-
-                compra_id.date_planned = self.fecha_entrega
-                compra_id.date_planned = compra_id.date_planned + datetime.timedelta(hours=6)
 
         else:
             raise UserError('Los siguientes productos no cumplen con el minimo de compra: ' +str(compras_monto))
